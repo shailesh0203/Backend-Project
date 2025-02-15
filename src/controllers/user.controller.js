@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from '../utils/ApiResponse.js';
+import jwt from "jsonwebtoken"
 const registerUser=asyncHandler(async(req,res)=>{
    /* res.status(200).json({
         message:"ok"
@@ -18,7 +19,7 @@ const registerUser=asyncHandler(async(req,res)=>{
    //return res
 
    const {fullname,username,email,password}=req.body
-   console.log(email);
+   console.log(email,fullname,username,password);
 
    /*if(fullname===""){
       throw new ApiError(400,"fullname is required")
@@ -27,13 +28,14 @@ const registerUser=asyncHandler(async(req,res)=>{
    throw new ApiError(400,"all fields are required")
   }
 
-const existedUser=User.findOne({
+const existedUser=await User.findOne({
    $or: [{username},{email}]
 })
 if(existedUser){
    throw new ApiError(409,"User with email or username already exist")
 }
 const avatarLocalPath=req.files?.avatar[0]?.path
+console.log(avatarLocalPath)
 const coverImageLocalPath=req.files?.coverImage[0]?.path
 if(!avatarLocalPath){
    throw new ApiError(400,"Avtar file is required")
@@ -43,7 +45,7 @@ const coverImage=await uploadOnCloudinary(coverImageLocalPath)
 if(!avatar){
    throw new ApiError(400,"Avtar file is required")
 }
-await User.create({
+const user=await User.create({
    fullname,
    avatar:avatar.url,
    coverImage:coverImage?.url || "",
@@ -51,14 +53,14 @@ await User.create({
    password,username:username.toLowerCase()
 })
 
-const createdUser=await User.findById(User._id).select(
+const createdUser=await User.findById(user._id).select(
    "-password -refreshToken"
 )
 if(!createdUser){
    throw new ApiError(500,"something went wrong while registering the user")
 }
 return res.status(201).json(
-   new ApiResponse(200,createdUser,"user registered succesfully")
+   new ApiResponse(200,"user registered succesfully")
 )
 })
 export {registerUser}
