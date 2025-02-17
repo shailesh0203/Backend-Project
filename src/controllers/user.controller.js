@@ -36,7 +36,7 @@ if(existedUser){
 }
 const avatarLocalPath=req.files?.avatar[0]?.path
 console.log(avatarLocalPath)
-const coverImageLocalPath=req.files?.coverImage[0]?.path
+const coverImageLocalPath=req.files?.coverImage?.[0]?.path
 if(!avatarLocalPath){
    throw new ApiError(400,"Avtar file is required")
 }
@@ -50,7 +50,8 @@ const user=await User.create({
    avatar:avatar.url,
    coverImage:coverImage?.url || "",
    email,
-   password,username:username.toLowerCase()
+   password,
+   username:username.toLowerCase()
 })
 
 const createdUser=await User.findById(user._id).select(
@@ -60,7 +61,18 @@ if(!createdUser){
    throw new ApiError(500,"something went wrong while registering the user")
 }
 return res.status(201).json(
-   new ApiResponse(200,"user registered succesfully")
+   new ApiResponse(200,createdUser,"user registered succesfully")
 )
 })
-export {registerUser}
+const loginUser=asyncHandler(async(req,res)=>{
+//take data from user,req.body
+//check if he filled all the credentials
+//check if it exist in the database
+//match the password
+//generate access and refresh tokenn
+//send cookie
+
+
+})
+
+export {registerUser,loginUser}
