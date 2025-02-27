@@ -132,8 +132,8 @@ const logoutUser=asyncHandler(async(req,res)=>{
    await User.findByIdAndUpdate(
       req.user._id,
       {
-         $set:{
-            refreshToken:undefined
+         $unset:{
+            refreshToken:1
          }
       },
       {
@@ -154,7 +154,7 @@ const logoutUser=asyncHandler(async(req,res)=>{
 })
 
 const refreshAccessToken=asyncHandler(async(req,res)=>{
-   const incomingRefreshToken=req.cookies.refreshAccessToken || req.body.refreshToken
+   const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken
    if(!incomingRefreshToken){
       throw new ApiError(401,"unauthorised request")
    }
@@ -163,7 +163,7 @@ const refreshAccessToken=asyncHandler(async(req,res)=>{
        incomingRefreshToken,
        process.env.REFRESH_TOKEN_SECRET
     )
-   const user= await User.findById(decodedToken?.id)
+   const user= await User.findById(decodedToken?._id)
  
    if(!user){
     throw new ApiError(401,"invalid refreshToken")
@@ -318,7 +318,7 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
    const channel=await User.aggregate([
       {
          $match:{
-            username:username?.toLowerCase()
+            username: username?.toLowerCase()
          }
       },
       {
@@ -340,10 +340,10 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
       {
          $addFields:{
             subscribersCount:{
-                  $size:"subscribers"
+                  $size:"$subscribers"
             },
             channelSubscribedToCount:{
-               $size:"subscribedTo"
+               $size:"$subscribedTo"
             },
             isSubscribed:{
                $cond:{
